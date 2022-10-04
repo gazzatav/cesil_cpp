@@ -1,11 +1,49 @@
-
+LOAD 5
 start	PRINT "Hello, World!"
-JUMP loop
-
-
+LINE
+SUBTRACT 1
+JIZERO next
+JUMP start
+next
+IN
 nothing
-
+PRINT "data: "
+OUT
+LINE
+MULTIPLY 20
+STORE twenty
+LOAD 22
+ADD twenty
+PRINT "the answer: "
+OUT
+LINE
+STORE forty-two
+DIVIDE 7
+PRINT "42 is "
+OUT
+PRINT " times "
+LOAD forty-two
+DIVIDE 6
+OUT
+LINE
+LOAD forty-two
+ADD 10
+STORE fifty-two
+PRINT "Fifty-two "
+OUT
+LINE
+MULTIPLY forty-two
+PRINT "Multiplied "
+LINE
+OUT
+LINE
+SUBTRACT 1000
+PRINT "Subtracted "
+OUT
+LINE
+DIVIDE 1
 not_start	PRINT "Hello, World!"
+LINE
 IN 97
 extra LOAD 5
 (this comment does nothing
@@ -17,7 +55,6 @@ extra LOAD 5
 5
 *
 MULTIPLY 2
-loop SUBTRACT 2
+SUBTRACT 2
 JINEG end
-JUMP loop
 end HALT

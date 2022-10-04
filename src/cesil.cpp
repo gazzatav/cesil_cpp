@@ -28,14 +28,14 @@ struct ParseVisitor{
 
   std::variant<StartLine, LabelFound, MnemonicFound, OperandFound, LineDone>
   operator()(StartLine&) {
-    std::cout << "\nAt Start:";
+    //    std::cout << "\nAt Start:";
     in_ >> std::ws;
     char look_ahead = in_.peek();
-    std::cout << "\nLook ahead is: " << look_ahead << ' ' << charToInt(look_ahead);
+    //    std::cout << "\nLook ahead is: " << look_ahead << ' ' << charToInt(look_ahead);
     // Look for data section
     if(look_ahead == '%'){
       in_.ignore(1000, '\n');
-      std::cout << "\nFound data section";
+      //      std::cout << "\nFound data section";
       return StartLine{};
     }
     // Ignore data section and parse separately.
@@ -46,24 +46,24 @@ struct ParseVisitor{
 
     else if(look_ahead == '('){
       in_.ignore(1000, '\n');
-      std::cout <<"\nFound comment.";
+      //      std::cout <<"\nFound comment.";
       return StartLine{};
     }
     else if(look_ahead == '*'){
       in_.ignore(1000, '\n');
-      std::cout << "\nFound end of data section.";
+      //      std::cout << "\nFound end of data section.";
       return StartLine{};
     }
     std::string token;
     in_ >> token;
     if(auto mnemonic = strToMnemonic(token); mnemonic == Mnemonic::UNKNOWN){
-      std::cout << "\nFound label: " << token;
+      //      std::cout << "\nFound label: " << token;
       col1 = token;
       return LabelFound{};
     }
     //	    else if(auto m = strToMnemonic(token); token.size() > 0 && m != Mnemonic::UNKNOWN){
     else{
-      std::cout << "\nFound Mnemonic: " << mnemonicToString(mnemonic);
+      //      std::cout << "\nFound Mnemonic: " << mnemonicToString(mnemonic);
       col2 = mnemonic;
       return MnemonicFound{};
     }
@@ -71,7 +71,7 @@ struct ParseVisitor{
 
   std::variant<StartLine, LabelFound, MnemonicFound, OperandFound, LineDone>
   operator()(LabelFound&) {
-    std::cout << "\nIn LabelFound" << std::flush;//flushing for debug
+    //    std::cout << "\nIn LabelFound" << std::flush;//flushing for debug
     if(remainsNewLine(in_)){
       in_ >> std::ws;
       col2 = Mnemonic::NOOP;
@@ -80,13 +80,13 @@ struct ParseVisitor{
     std::string token;
     in_ >> token;
     if(auto mnemonic = strToMnemonic(token); mnemonic != Mnemonic::UNKNOWN){
-      std::cout << "\tFound Mnemonic: " << token << '\t'
-		<< "Mnemonic: " << mnemonicToString(mnemonic);
+      //      std::cout << "\tFound Mnemonic: " << token << '\t'
+      //		<< "Mnemonic: " << mnemonicToString(mnemonic);
       col2 = mnemonic;
       return MnemonicFound{};
     }
     else if(token.size() > 0){
-      std::cout << "Extra label: " << token << std::endl;
+      //      std::cout << "Extra label: " << token << std::endl;
       throw std::runtime_error("Extra label after label (no mnemonic).");
     }
     else{
@@ -96,7 +96,7 @@ struct ParseVisitor{
 
   std::variant<StartLine, LabelFound, MnemonicFound, OperandFound, LineDone>
   operator()(MnemonicFound&) {
-    std::cout << "\nIn MnemonicFound";
+    //    std::cout << "\nIn MnemonicFound";
     // Some mnemonics have no operand.
     if(remainsNewLine(in_)){
       return LineDone{};
@@ -108,7 +108,7 @@ struct ParseVisitor{
       in_.ignore(1);
       std::string literal;
       std::getline(in_, literal, '"');
-      std::cout << "\nOperand: " << literal << " is a string literal.";
+      //      std::cout << "\nOperand: " << literal << " is a string literal.";
       col3 = literal;
       return OperandFound{};
     }
@@ -116,13 +116,13 @@ struct ParseVisitor{
     else if(isDigit(look_ahead)){
       int digits;
       in_ >> digits;
-      std::cout << "\nOperand: " << digits << " is a number.";
+      //      std::cout << "\nOperand: " << digits << " is a number.";
       col3 = digits;
       return OperandFound{};
     }
     // Look for jump destination
     else if(look_ahead > 0x20 && look_ahead < 0x7b){
-      std::cout << "\nFound jump destination";
+      //      std::cout << "\nFound jump destination";
       std::string dest;
       in_ >> dest;
       col3 = dest;
@@ -136,14 +136,14 @@ struct ParseVisitor{
 
   std::variant<StartLine, LabelFound, MnemonicFound, OperandFound, LineDone>
   operator()(OperandFound&) {
-    std::cout << "\nIn OperandFound.";
+    //    std::cout << "\nIn OperandFound.";
     while(in_.peek() == ' ' || in_.peek() == '\t'){
       char c;
       in_ >> std::noskipws >> c;
-      std::cout << "\nExtracted char is: " << c << ' ' << charToInt(c);
+      //      std::cout << "\nExtracted char is: " << c << ' ' << charToInt(c);
     }
     char p = in_.peek();
-    std::cout << "\nPeeked char is: " << p << ' ' << charToInt(p) << '\n';
+    //    std::cout << "\nPeeked char is: " << p << ' ' << charToInt(p) << '\n';
     if(p == '\n'){
       in_ >> std::ws;
       return LineDone{};
@@ -155,7 +155,7 @@ struct ParseVisitor{
 
   std::variant<StartLine, LabelFound, MnemonicFound, OperandFound, LineDone>
   operator()(LineDone&) {
-    std::cout << "\nLine Done.";
+    //    std::cout << "\nLine Done.";
     in_.clear();
     in_ >> std::ws;
     return StartLine{};
@@ -244,19 +244,19 @@ std::ostream& operator<<(std::ostream& out, Line& l){
 }
 
 Data parseData(std::istream& in){
-  std::cout << "\nIn parseData";
+  //  std::cout << "\nIn parseData";
   Data data;
   while(in.good()){
     char c = in.peek();
     if(c == '%'){
       in.ignore(1000, '\n');
       while(in.good() && c != '*'){
-	std::cout << "\nIn second while loop.";
+	//	std::cout << "\nIn second while loop.";
 	int32_t d;
 	in >> d;
 	in.ignore(1000, '\n');
 	c = in.peek();
-	std::cout << "\ndatum is " << d;
+	//	std::cout << "\ndatum is " << d;
 	data.push_back(d);
       }
     }
@@ -266,7 +266,6 @@ Data parseData(std::istream& in){
   }
   return data;
 }
-
 
 LabAdds resolveLabels(Program& prog){
   // First pass put labels and address in map.
@@ -286,13 +285,13 @@ LabAdds resolveLabels(Program& prog){
       }
     }
   }
-  std::cout << "\nFirst pass complete.";
+  //  std::cout << "\nFirst pass complete.";
   // Second pass, check all jump instructions and set addresses.
   for(auto& line: prog){
-    std::cout << "\nCurrent line: " << line;
+    //    std::cout << "\nCurrent line: " << line;
     using enum Mnemonic;
     auto mnem = std::get<Mnemonic>(line.mnemonicV()); // every prog line has mnemonic.
-    std::cout << "\nBefore mnemonic comparison. mnemonic: " << mnemonicToString(mnem) << " Line " << line;
+    //    std::cout << "\nBefore mnemonic comparison. mnemonic: " << mnemonicToString(mnem) << " Line " << line;
     if(mnem == JUMP || mnem == JINEG || mnem == JIZERO ){
       // Should have a label.
 	auto lab = std::get<std::string>(line.operandV());
@@ -303,12 +302,183 @@ LabAdds resolveLabels(Program& prog){
       }
       else{
 	auto x = labadds[lab];
-	std::cout << "\nlabadds[lab] is " << x;
+	//	std::cout << "\nlabadds[lab] is " << x;
 	auto& op = line.operandV();
 	op = static_cast<std::size_t>(x);
-	std::cout << "\nLine: " << line;
+	//	std::cout << "\nLine: " << line;
       }
     }
   }
   return labadds;
+}
+
+// NOOP, PRINT, LINE, IN, OUT, LOAD, STORE, ADD,
+// SUBTRACT, MULTIPLY, DIVIDE, JUMP, JINEG, JIZERO, HALT
+
+CesilMachine::CesilMachine(Program& prog, Data& data, NamedVars& vars)
+  :prog_(std::move(prog)), data_(std::move(data)), vars_(std::move(vars)), pc(0), dc(0), accumulator(0){}
+void CesilMachine::executeLine(){
+  switch(std::get<Mnemonic>(prog_[pc].mnemonicV())){
+    using enum Mnemonic;
+  case NOOP:
+    ++pc;
+    break;
+  case PRINT:
+    std::cout << std::get<std::string>(prog_[pc].operandV());
+    ++pc;
+    break;
+  case LINE:
+    std::cout << '\n';
+    ++pc;
+    break;
+  case IN:
+    if(dc < data_.size()){
+      accumulator = data_[dc];
+      ++dc; ++pc;
+    }
+    else{
+      std::cout << "\n*** PROGRAM REQUIRES MORE DATA ***" << std::endl;
+      run_ = false;
+    }
+    break;
+  case OUT:
+    std::cout << accumulator;
+    ++pc;
+    break;
+  case LOAD:
+    if(std::holds_alternative<std::string>(prog_[pc].operandV())){
+      auto name = std::get<std::string>(prog_[pc].operandV());
+      accumulator = static_cast<int32_t>(vars_[name]);
+      }
+    else{
+      accumulator = std::get<int32_t>(prog_[pc].operandV());
+    }
+    ++pc;
+    break;
+  case STORE:
+    if(std::holds_alternative<std::string>(prog_[pc].operandV())){
+      vars_[std::get<std::string>(prog_[pc].operandV())] = accumulator;
+    }
+    else{
+      throw std::runtime_error("Error: Program lacked a store location.");
+    }
+    ++pc;
+    break;
+  case ADD:
+    if(std::holds_alternative<std::string>(prog_[pc].operandV())){
+      accumulator += vars_[std::get<std::string>(prog_[pc].operandV())];
+    }
+    else{
+      accumulator += std::get<int32_t>(prog_[pc].operandV());
+    }
+    ++pc;
+    break;
+  case SUBTRACT:
+    if(std::holds_alternative<std::string>(prog_[pc].operandV())){
+      accumulator -= vars_[std::get<std::string>(prog_[pc].operandV())];
+    }
+    else{
+      accumulator -= std::get<int32_t>(prog_[pc].operandV());
+    }
+    ++pc;
+    break;
+  case MULTIPLY:
+    if(std::holds_alternative<std::string>(prog_[pc].operandV())){
+      accumulator *= vars_[std::get<std::string>(prog_[pc].operandV())];
+    }
+    else{
+      accumulator *= std::get<int32_t>(prog_[pc].operandV());
+    }
+    ++pc;
+    break;
+  case DIVIDE:
+    int32_t divisor;
+    if(std::holds_alternative<std::string>(prog_[pc].operandV())){
+      divisor = vars_[std::get<std::string>(prog_[pc].operandV())];
+    }
+    else{
+      divisor = std::get<int32_t>(prog_[pc].operandV());
+    }
+    if(divisor == 0){
+      std::cout << "\n*** DIVISION BY ZERO ***" << std::endl;
+      run_ = false;
+    }
+    else{
+      accumulator /= divisor;
+    }
+    ++pc;
+    break;
+  case JUMP:
+    if(std::holds_alternative<std::size_t>(prog_[pc].operandV())){
+      pc = std::get<std::size_t>(prog_[pc].operandV());
+    }
+    else{
+      throw std::runtime_error("JUMP instruction without label");
+    }
+    break;
+  case JINEG:
+    if(std::holds_alternative<std::size_t>(prog_[pc].operandV())){
+      if(accumulator < 0){
+	pc = std::get<std::size_t>(prog_[pc].operandV());
+      }
+      else{
+	++pc;
+      }
+    }
+    else{
+      throw std::runtime_error("JINEG instruction without label");
+    }
+    break;
+  case JIZERO:
+    if(std::holds_alternative<std::size_t>(prog_[pc].operandV())){
+      if(accumulator == 0){
+      pc = std::get<std::size_t>(prog_[pc].operandV());
+      }
+      else{
+	++pc;
+      }
+    }
+    else{
+      throw std::runtime_error("JIZERO instruction without label");
+    }
+    break;
+  case HALT:
+    run_ = false;
+    break;
+  default:++pc;
+  }
+}
+void CesilMachine::run(){
+  run_ =  true;
+  std::cout << "Running with PC = " << pc << '\n';
+  while(run_){
+    executeLine();
+  }
+}
+void CesilMachine::debug(){
+    run_ =  true;
+    std::cout << std::string(10, '*') << " DEBUG " << std::string(10, '*');
+    std::cout << "\nData: ";
+    for(auto d: data_)
+      std::cout << d << ",\t";
+    for(auto& var: vars_){
+      std::cout << "Name: " << var.first << ", Val: " << var.second << '\n';
+    }
+
+  while(run_){
+    for(auto& var: vars_){
+      std::cout << "Name: " << var.first << ", Val: " << var.second << '\n';
+    }
+    std::cout << "Debug: PC: " << pc << ", ACC: " << accumulator << '\n';
+    std::cout << "LINE: " << prog_[pc] << '\n' << std::string(80, '=') << '\n';
+    executeLine();
+    std::cout << '\n' << std::string(80,'=') << "\nDebug: PC: " << pc << ", ACC: " << accumulator << '\n';
+    for(auto& var: vars_){
+      std::cout << "Name: " << var.first << ", Val: " << var.second << "\n\n";
+    }
+  }
+      std::cout << std::string(10, '*') << " DEBUG END " << std::string(10, '*');
+}
+void CesilMachine::reset(){
+  pc = 0;
 }

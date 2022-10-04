@@ -22,9 +22,7 @@ int main(int argc, char* argv[]){
       }
     }
   }
-  auto nem = Mnemonic::PRINT;
-  std::cout << "Testing mnemonicToString with PRINT: " << mnemonicToString(nem) << '\n';
-  // Process line.
+
   Program lines;
   while(in.good()){
     lines.emplace_back(parseLine(in));
@@ -48,4 +46,8 @@ int main(int argc, char* argv[]){
   for(auto& add:labs){
     std::cout << add.first << ' ' << add.second << '\n';
   }
+  std::map<std::string, int32_t> vars{};
+  vars["forty-two"] = 42;
+  CesilMachine mac(lines, data, vars);
+  mac.run();
 }

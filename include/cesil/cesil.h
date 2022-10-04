@@ -44,17 +44,22 @@ public:
   friend std::ostream& operator<<(std::ostream&, Line&);
 
 };
-using Program = std::vector<Line>;
+
 class CesilMachine{
 private:
+  Program prog_;
+  Data data_;
+  NamedVars vars_;
   std::size_t pc;
   std::size_t dc;
+  bool run_;
   int32_t accumulator;
+  void executeLine();
 public:
-  CesilMachine(Program prog, Data data, LabAdds labadds);
+  CesilMachine(Program& prog, Data& data, NamedVars& vars);
   void run();
   void debug();
-  void step();
+  void reset();
   // method for each instruction
 };
 
