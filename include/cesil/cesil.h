@@ -60,6 +60,7 @@ public:
   void run();
   void debug();
   void reset();
+  Program& eject();
   // method for each instruction
 };
 

@@ -12,29 +12,35 @@ int main(int argc, char* argv[]){
   }
   else{
     std::ofstream in_prog("prog_text");
+    if(!in_prog){
+      return 1;
+    }
     std::string line;
     while(std::cin.good()){
       std::getline(std::cin, line);
       std::cin >> std::ws;
       in_prog << line << '\n';
       if(std::cin.peek() == '*'){
+	std::getline(std::cin, line);
+	in_prog << line;
+	in_prog.close();
 	break;
       }
     }
+    in.open("prog_text");
   }
 
-  Program lines;
+  Program prog;
   while(in.good()){
-    lines.emplace_back(parseLine(in));
+    prog.emplace_back(parseLine(in));
   }
-  std::cout << "\nOutputting Lines.............\n\n";
-  for(Line& l: lines){
+  std::cout << "\nOutputting Prog.............\n\n";
+  for(Line& l: prog){
     static unsigned i{1};
     std::cout << "At line " << i << '\t' << l << '\n';
     ++i;
   }
-  in.clear();
-  in.seekg(0, in.beg);
+
   Data data= parseData(in);
   std::cout << '\n';
   for(auto n:data){
@@ -42,12 +48,18 @@ int main(int argc, char* argv[]){
   }
   std::cout << '\n';
 
-  auto labs = resolveLabels(lines);
+  auto labs = resolveLabels(prog);
   for(auto& add:labs){
     std::cout << add.first << ' ' << add.second << '\n';
   }
   std::map<std::string, int32_t> vars{};
   vars["forty-two"] = 42;
-  CesilMachine mac(lines, data, vars);
+  CesilMachine mac(prog, data, vars);
   mac.run();
+
+  std::map<std::string, int32_t> vars2{};
+  vars2["forty-two"] = 42;
+
+  CesilMachine mac2(mac.eject(), data, vars2);
+  mac2.debug();
 }

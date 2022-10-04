@@ -202,7 +202,10 @@ MnemonicV& Line::mnemonicV(){
 OperandV& Line::operandV(){
   return line_->operand;
 }
+
 Line parseLine(std::istream& in){
+  in.clear();
+  in.seekg(0, in.beg);
   std::variant<StartLine, LabelFound, MnemonicFound, OperandFound, LineDone> parseStatus{};
   auto pv = ParseVisitor{in};
   while(in.good() && !std::holds_alternative<LineDone>(parseStatus)){
@@ -246,6 +249,8 @@ std::ostream& operator<<(std::ostream& out, Line& l){
 Data parseData(std::istream& in){
   //  std::cout << "\nIn parseData";
   Data data;
+  in.clear();
+  in.seekg(0, in.beg);
   while(in.good()){
     char c = in.peek();
     if(c == '%'){
@@ -455,6 +460,11 @@ void CesilMachine::run(){
     executeLine();
   }
 }
+
+Program& CesilMachine::eject(){
+  return prog_;
+}
+
 void CesilMachine::debug(){
     run_ =  true;
     std::cout << std::string(10, '*') << " DEBUG " << std::string(10, '*');
@@ -469,10 +479,10 @@ void CesilMachine::debug(){
     for(auto& var: vars_){
       std::cout << "Name: " << var.first << ", Val: " << var.second << '\n';
     }
-    std::cout << "Debug: PC: " << pc << ", ACC: " << accumulator << '\n';
+    std::cout << "Debug: PC: " << pc << ", DC: " << dc << ", ACC: " << accumulator << '\n';
     std::cout << "LINE: " << prog_[pc] << '\n' << std::string(80, '=') << '\n';
     executeLine();
-    std::cout << '\n' << std::string(80,'=') << "\nDebug: PC: " << pc << ", ACC: " << accumulator << '\n';
+    std::cout << '\n' << std::string(80,'=') << "\nDebug: PC: " << pc << ", DC: " << dc<< ", ACC: " << accumulator << '\n';
     for(auto& var: vars_){
       std::cout << "Name: " << var.first << ", Val: " << var.second << "\n\n";
     }
@@ -481,4 +491,6 @@ void CesilMachine::debug(){
 }
 void CesilMachine::reset(){
   pc = 0;
+  dc = 0;
+  accumulator = 0;
 }

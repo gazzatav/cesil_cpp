@@ -11,7 +11,6 @@ bool remainsNewLine(std::istream& in){
     in >> std::noskipws >> c;
     c = in.peek();
   }
-  //  std::cout << "\nChar peeked in remainsNewLine: " << c << ' ' << charToInt(c);
   if(in.peek() == '\n'){
     return true;
   }
@@ -22,6 +21,9 @@ bool remainsNewLine(std::istream& in){
 
 bool isDigit(char c){
   if(c >= '0' && c <= '9'){
+    return true;
+  }
+  else if(c == '+' || c == '-'){
     return true;
   }
   else{
