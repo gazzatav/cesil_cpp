@@ -1,0 +1,23 @@
+
+start	PRINT "Hello, World!"
+JUMP loop
+
+
+nothing
+
+not_start	PRINT "Hello, World!"
+IN 97
+extra LOAD 5
+(this comment does nothing
+%
+1
+2
+3
+4
+5
+*
+MULTIPLY 2
+loop SUBTRACT 2
+JINEG end
+JUMP loop
+end HALT
