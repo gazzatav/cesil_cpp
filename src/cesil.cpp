@@ -28,17 +28,12 @@ struct ParseVisitor{
 
   std::variant<StartLine, LabelFound, MnemonicFound, OperandFound, LineDone>
   operator()(StartLine&) {
-    //    std::cout << "\nAt Start:";
     in_ >> std::ws;
     char look_ahead = in_.peek();
-    //    std::cout << "\nLook ahead is: " << look_ahead << ' ' << charToInt(look_ahead);
-    // Look for data section
     if(look_ahead == '%'){
       in_.ignore(1000, '\n');
-      //      std::cout << "\nFound data section";
       return StartLine{};
     }
-    // Ignore data section and parse separately.
     else if(isDigit(look_ahead)){
       in_.ignore(1000, '\n');
       return StartLine{};
@@ -46,24 +41,19 @@ struct ParseVisitor{
 
     else if(look_ahead == '('){
       in_.ignore(1000, '\n');
-      //      std::cout <<"\nFound comment.";
       return StartLine{};
     }
     else if(look_ahead == '*'){
       in_.ignore(1000, '\n');
-      //      std::cout << "\nFound end of data section.";
       return StartLine{};
     }
     std::string token;
     in_ >> token;
     if(auto mnemonic = strToMnemonic(token); mnemonic == Mnemonic::UNKNOWN){
-      //      std::cout << "\nFound label: " << token;
       col1 = token;
       return LabelFound{};
     }
-    //	    else if(auto m = strToMnemonic(token); token.size() > 0 && m != Mnemonic::UNKNOWN){
     else{
-      //      std::cout << "\nFound Mnemonic: " << mnemonicToString(mnemonic);
       col2 = mnemonic;
       return MnemonicFound{};
     }
@@ -71,7 +61,6 @@ struct ParseVisitor{
 
   std::variant<StartLine, LabelFound, MnemonicFound, OperandFound, LineDone>
   operator()(LabelFound&) {
-    //    std::cout << "\nIn LabelFound" << std::flush;//flushing for debug
     if(remainsNewLine(in_)){
       in_ >> std::ws;
       col2 = Mnemonic::NOOP;
@@ -80,13 +69,10 @@ struct ParseVisitor{
     std::string token;
     in_ >> token;
     if(auto mnemonic = strToMnemonic(token); mnemonic != Mnemonic::UNKNOWN){
-      //      std::cout << "\tFound Mnemonic: " << token << '\t'
-      //		<< "Mnemonic: " << mnemonicToString(mnemonic);
       col2 = mnemonic;
       return MnemonicFound{};
     }
     else if(token.size() > 0){
-      //      std::cout << "Extra label: " << token << std::endl;
       throw std::runtime_error("Extra label after label (no mnemonic).");
     }
     else{
@@ -96,33 +82,25 @@ struct ParseVisitor{
 
   std::variant<StartLine, LabelFound, MnemonicFound, OperandFound, LineDone>
   operator()(MnemonicFound&) {
-    //    std::cout << "\nIn MnemonicFound";
-    // Some mnemonics have no operand.
     if(remainsNewLine(in_)){
       return LineDone{};
     }
     in_ >> std::ws;
     char look_ahead = in_.peek();
-    // look for literal
     if(look_ahead == '"'){
       in_.ignore(1);
       std::string literal;
       std::getline(in_, literal, '"');
-      //      std::cout << "\nOperand: " << literal << " is a string literal.";
       col3 = literal;
       return OperandFound{};
     }
-    // Look for digits
     else if(isDigit(look_ahead)){
       int digits;
       in_ >> digits;
-      //      std::cout << "\nOperand: " << digits << " is a number.";
       col3 = digits;
       return OperandFound{};
     }
-    // Look for jump destination
     else if(look_ahead > 0x20 && look_ahead < 0x7b){
-      //      std::cout << "\nFound jump destination";
       std::string dest;
       in_ >> dest;
       col3 = dest;
@@ -136,14 +114,11 @@ struct ParseVisitor{
 
   std::variant<StartLine, LabelFound, MnemonicFound, OperandFound, LineDone>
   operator()(OperandFound&) {
-    //    std::cout << "\nIn OperandFound.";
     while(in_.peek() == ' ' || in_.peek() == '\t'){
       char c;
       in_ >> std::noskipws >> c;
-      //      std::cout << "\nExtracted char is: " << c << ' ' << charToInt(c);
     }
     char p = in_.peek();
-    //    std::cout << "\nPeeked char is: " << p << ' ' << charToInt(p) << '\n';
     if(p == '\n'){
       in_ >> std::ws;
       return LineDone{};
@@ -155,17 +130,11 @@ struct ParseVisitor{
 
   std::variant<StartLine, LabelFound, MnemonicFound, OperandFound, LineDone>
   operator()(LineDone&) {
-    //    std::cout << "\nLine Done.";
     in_.clear();
     in_ >> std::ws;
     return StartLine{};
   }
 };
-// Want a visitor that can handle five states:
-// EmptyLine, LabelFound, MnemonicFound, OperandFound,
-// UnknownError and pseudo state Noop.
-
-// *** PROGRAM REQUIRES MORE DATA *** output when we run out of data.
 
 class Line::LineImpl{
 private:
@@ -202,7 +171,10 @@ MnemonicV& Line::mnemonicV(){
 OperandV& Line::operandV(){
   return line_->operand;
 }
+
 Line parseLine(std::istream& in){
+  in.clear();
+  in.seekg(0, in.beg);
   std::variant<StartLine, LabelFound, MnemonicFound, OperandFound, LineDone> parseStatus{};
   auto pv = ParseVisitor{in};
   while(in.good() && !std::holds_alternative<LineDone>(parseStatus)){
@@ -244,19 +216,18 @@ std::ostream& operator<<(std::ostream& out, Line& l){
 }
 
 Data parseData(std::istream& in){
-  //  std::cout << "\nIn parseData";
   Data data;
+  in.clear();
+  in.seekg(0, in.beg);
   while(in.good()){
     char c = in.peek();
     if(c == '%'){
       in.ignore(1000, '\n');
       while(in.good() && c != '*'){
-	//	std::cout << "\nIn second while loop.";
 	int32_t d;
 	in >> d;
 	in.ignore(1000, '\n');
 	c = in.peek();
-	//	std::cout << "\ndatum is " << d;
 	data.push_back(d);
       }
     }
@@ -268,8 +239,6 @@ Data parseData(std::istream& in){
 }
 
 LabAdds resolveLabels(Program& prog){
-  // First pass put labels and address in map.
-  // Check they are unique.
   LabAdds labadds;
   for(std::size_t index(0); index < prog.size(); ++index){
     auto alt = prog[index].labelV();
@@ -285,15 +254,10 @@ LabAdds resolveLabels(Program& prog){
       }
     }
   }
-  //  std::cout << "\nFirst pass complete.";
-  // Second pass, check all jump instructions and set addresses.
   for(auto& line: prog){
-    //    std::cout << "\nCurrent line: " << line;
     using enum Mnemonic;
     auto mnem = std::get<Mnemonic>(line.mnemonicV()); // every prog line has mnemonic.
-    //    std::cout << "\nBefore mnemonic comparison. mnemonic: " << mnemonicToString(mnem) << " Line " << line;
     if(mnem == JUMP || mnem == JINEG || mnem == JIZERO ){
-      // Should have a label.
 	auto lab = std::get<std::string>(line.operandV());
       if(labadds.find(lab) == labadds.end()){
 	std::ostringstream os;
@@ -302,21 +266,17 @@ LabAdds resolveLabels(Program& prog){
       }
       else{
 	auto x = labadds[lab];
-	//	std::cout << "\nlabadds[lab] is " << x;
 	auto& op = line.operandV();
 	op = static_cast<std::size_t>(x);
-	//	std::cout << "\nLine: " << line;
       }
     }
   }
   return labadds;
 }
 
-// NOOP, PRINT, LINE, IN, OUT, LOAD, STORE, ADD,
-// SUBTRACT, MULTIPLY, DIVIDE, JUMP, JINEG, JIZERO, HALT
-
 CesilMachine::CesilMachine(Program& prog, Data& data, NamedVars& vars)
   :prog_(std::move(prog)), data_(std::move(data)), vars_(std::move(vars)), pc(0), dc(0), accumulator(0){}
+
 void CesilMachine::executeLine(){
   switch(std::get<Mnemonic>(prog_[pc].mnemonicV())){
     using enum Mnemonic;
@@ -455,6 +415,11 @@ void CesilMachine::run(){
     executeLine();
   }
 }
+
+Program& CesilMachine::eject(){
+  return prog_;
+}
+
 void CesilMachine::debug(){
     run_ =  true;
     std::cout << std::string(10, '*') << " DEBUG " << std::string(10, '*');
@@ -469,10 +434,10 @@ void CesilMachine::debug(){
     for(auto& var: vars_){
       std::cout << "Name: " << var.first << ", Val: " << var.second << '\n';
     }
-    std::cout << "Debug: PC: " << pc << ", ACC: " << accumulator << '\n';
+    std::cout << "Debug: PC: " << pc << ", DC: " << dc << ", ACC: " << accumulator << '\n';
     std::cout << "LINE: " << prog_[pc] << '\n' << std::string(80, '=') << '\n';
     executeLine();
-    std::cout << '\n' << std::string(80,'=') << "\nDebug: PC: " << pc << ", ACC: " << accumulator << '\n';
+    std::cout << '\n' << std::string(80,'=') << "\nDebug: PC: " << pc << ", DC: " << dc<< ", ACC: " << accumulator << '\n';
     for(auto& var: vars_){
       std::cout << "Name: " << var.first << ", Val: " << var.second << "\n\n";
     }
@@ -481,4 +446,6 @@ void CesilMachine::debug(){
 }
 void CesilMachine::reset(){
   pc = 0;
+  dc = 0;
+  accumulator = 0;
 }
