@@ -44,7 +44,7 @@ public:
   friend std::ostream& operator<<(std::ostream&, Line&);
 
 };
-
+using Program = std::vector<Line>;
 class CesilMachine{
 private:
   Program prog_;
@@ -60,7 +60,7 @@ public:
   void run();
   void debug();
   void reset();
-  // method for each instruction
+  Program& eject();
 };
 
 Line parseLine(std::istream& in);
