@@ -188,8 +188,6 @@ OperandV& Line::operandV(){
 }
 
 Line parseLine(std::istream& in){
-  in.clear();
-  in.seekg(0, in.beg);
   std::variant<StartLine, LabelFound, MnemonicFound, OperandFound, LineDone> parseStatus{};
   auto pv = ParseVisitor{in};
   while(in.good() && !std::holds_alternative<LineDone>(parseStatus)){
