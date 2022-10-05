@@ -441,7 +441,7 @@ void CesilMachine::debug(){
   for(auto d: data_)
     std::cout << d << ",\t";
   for(auto& var: vars_){
-    std::cout << "Name: " << var.first << ", Val: " << var.second << '\n';
+    std::cout << "\nName: " << var.first << ", Val: " << var.second << '\n';
   }
 
   while(run_){
