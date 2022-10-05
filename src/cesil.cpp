@@ -33,7 +33,6 @@ struct ParseVisitor{
     char look_ahead;
     in_ >> look_ahead;
     if(!in_.good()){
-      std::cout << "in not good with c = " << look_ahead << '\n';
       return LineDone{};
     }
     //    std::cout << "\nLook ahead is: " << look_ahead << ' ' << charToInt(look_ahead);
