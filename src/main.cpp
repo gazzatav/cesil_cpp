@@ -9,6 +9,13 @@ int main(int argc, char* argv[]){
   std::ifstream in;
   if(argc > 1){
     in.open(argv[1]);
+    if(in){
+      std::cout << "File is opened.\n";
+    }
+    else{
+      std::cout << "File is not opened.\n";
+      return 1;
+    }
   }
   else{
     std::ofstream in_prog("prog_text");
@@ -29,16 +36,37 @@ int main(int argc, char* argv[]){
     }
     in.open("prog_text");
   }
-
   Program prog;
+  in.clear();
+  in.seekg(0, in.beg);
   while(in.good()){
     prog.emplace_back(parseLine(in));
   }
+  if(std::holds_alternative<std::monostate>(prog.back().mnemonicV())){
+      prog.pop_back();
+    }
+  std::cout << "\nOutputting Prog.............\n\n";
+  for(Line& l: prog){
+    static unsigned i{0};
+    std::cout << "At line " << i << '\t' << l << '\n';
+    ++i;
+  }
+
   Data data= parseData(in);
+  std::cout << '\n';
+  for(auto n:data){
+    std::cout << "Data entry: " << n << '\t';
+  }
+  std::cout << '\n';
+std::cout << "Debug: program size. " << prog.size() << '\n';
   auto labs = resolveLabels(prog);
+  for(auto& add:labs){
+    std::cout << add.first << ' ' << add.second << '\n';
+  }
   std::map<std::string, int32_t> vars{};
   vars["forty-two"] = 42;
   CesilMachine mac(prog, data, vars);
-  mac.run();
-  //mac.debug();
+
+  //mac.run();
+  mac.debug();
 }

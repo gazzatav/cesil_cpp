@@ -31,3 +31,5 @@
 *.out
 *.app
 include/cesil/version.h
+
+.emacs*

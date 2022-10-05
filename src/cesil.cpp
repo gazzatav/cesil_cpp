@@ -29,8 +29,14 @@ struct ParseVisitor{
   std::variant<StartLine, LabelFound, MnemonicFound, OperandFound, LineDone>
   operator()(StartLine&) {
     in_ >> std::ws;
-    char look_ahead = in_.peek();
-    if(look_ahead == '%'){
+    char look_ahead;
+    in_ >> look_ahead;
+    if(!in_.good()){
+      return LineDone{};
+    }
+    //    std::cout << "\nLook ahead is: " << look_ahead << ' ' << charToInt(look_ahead);
+    // Look for data section
+    else if(look_ahead == '%'){
       in_.ignore(1000, '\n');
       return StartLine{};
     }
@@ -47,15 +53,24 @@ struct ParseVisitor{
       in_.ignore(1000, '\n');
       return StartLine{};
     }
+    in_.unget();
     std::string token;
     in_ >> token;
-    if(auto mnemonic = strToMnemonic(token); mnemonic == Mnemonic::UNKNOWN){
-      col1 = token;
-      return LabelFound{};
+    if(token.size() > 0){
+      if(auto mnemonic = strToMnemonic(token); mnemonic == Mnemonic::UNKNOWN){
+	//      std::cout << "\nFound label: " << token;
+	col1 = token;
+	return LabelFound{};
+      }
+      //	    else if(auto m = strToMnemonic(token); token.size() > 0 && m != Mnemonic::UNKNOWN){
+      else{
+	//      std::cout << "\nFound Mnemonic: " << mnemonicToString(mnemonic);
+	col2 = mnemonic;
+	return MnemonicFound{};
+      }
     }
     else{
-      col2 = mnemonic;
-      return MnemonicFound{};
+      return LineDone{};
     }
   }
 
@@ -180,7 +195,7 @@ Line parseLine(std::istream& in){
   while(in.good() && !std::holds_alternative<LineDone>(parseStatus)){
     parseStatus = std::visit(pv, parseStatus);
   }
-  parseStatus = std::visit(pv, parseStatus);
+  //parseStatus = std::visit(pv, parseStatus);
   return Line{std::move(pv.col1), std::move(pv.col2), std::move(pv.col3)};
 }
 
@@ -309,7 +324,7 @@ void CesilMachine::executeLine(){
     if(std::holds_alternative<std::string>(prog_[pc].operandV())){
       auto name = std::get<std::string>(prog_[pc].operandV());
       accumulator = static_cast<int32_t>(vars_[name]);
-      }
+    }
     else{
       accumulator = std::get<int32_t>(prog_[pc].operandV());
     }
@@ -392,7 +407,7 @@ void CesilMachine::executeLine(){
   case JIZERO:
     if(std::holds_alternative<std::size_t>(prog_[pc].operandV())){
       if(accumulator == 0){
-      pc = std::get<std::size_t>(prog_[pc].operandV());
+	pc = std::get<std::size_t>(prog_[pc].operandV());
       }
       else{
 	++pc;
@@ -421,14 +436,15 @@ Program& CesilMachine::eject(){
 }
 
 void CesilMachine::debug(){
-    run_ =  true;
-    std::cout << std::string(10, '*') << " DEBUG " << std::string(10, '*');
-    std::cout << "\nData: ";
-    for(auto d: data_)
-      std::cout << d << ",\t";
-    for(auto& var: vars_){
-      std::cout << "Name: " << var.first << ", Val: " << var.second << '\n';
-    }
+  std::cout << "Length of program: " << prog_.size() << " lines.\n";
+  run_ =  true;
+  std::cout << std::string(10, '*') << " DEBUG " << std::string(10, '*');
+  std::cout << "\nData: ";
+  for(auto d: data_)
+    std::cout << d << ",\t";
+  for(auto& var: vars_){
+    std::cout << "Name: " << var.first << ", Val: " << var.second << '\n';
+  }
 
   while(run_){
     for(auto& var: vars_){
@@ -442,7 +458,7 @@ void CesilMachine::debug(){
       std::cout << "Name: " << var.first << ", Val: " << var.second << "\n\n";
     }
   }
-      std::cout << std::string(10, '*') << " DEBUG END " << std::string(10, '*');
+  std::cout << std::string(10, '*') << " DEBUG END " << std::string(10, '*') << '\n';
 }
 void CesilMachine::reset(){
   pc = 0;
