@@ -1,5 +1,5 @@
 # cesil_cpp
-Parse and execute programs written in CESIL.
+Parse and execute programs written in <a href="https://en.wikipedia.org/wiki/CESIL">CESIL</a>.
 
 <p>This code is written with C++ 20 features but will probably compile for 17 after removing the <code>use enum Mnemonic;</code> statement and adding the enum class name in the switch cases etc.</p>
 <p>Create a build folder and point cmake to the topmost CMakeLists.txt file e.g <code>cmake path/to/CMakeLists.txt</code>.</p>
